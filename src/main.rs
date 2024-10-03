@@ -1,3 +1,7 @@
+mod engine;
+
+use engine::GVPengine;
+
 fn main() {
-    println!("Hello, world!");
+  let engine = GVPengine::new();
 }
