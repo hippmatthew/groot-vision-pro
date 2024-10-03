@@ -1,4 +1,6 @@
+use super::gui::GUI;
 use ash::{vk, khr};
+use sdl2::{event::Event, keyboard::Keycode};
 use std::{ffi::CStr, vec::Vec};
 
 macro_rules! c_str {
@@ -9,22 +11,38 @@ macro_rules! c_str {
 
 macro_rules! gvp_version {
   () => {
-    vk::make_api_version(0, 0, 1, 0)
+    vk::make_api_version(0, 0, 2, 0)
   }
 }
 
 pub struct GVPengine {
-  entry : ash::Entry,
-  vk_instance : ash::Instance
+  gui: GUI,
+  #[allow(dead_code)]
+  entry: ash::Entry,
+  vk_instance: ash::Instance
 }
 
 impl GVPengine {
-  pub fn new() -> Self {
+  pub fn init() -> Self {
+    let gui = GUI::new();
     let (entry, vk_instance) = GVPengine::create_instance();
 
     GVPengine {
+      gui,
       entry,
       vk_instance
+    }
+  }
+
+  pub fn run(&self) {
+    'main_loop: loop {
+      for event in self.gui.sdl_context.event_pump().unwrap().poll_iter() {
+        match event {
+          Event::Quit {..} => break 'main_loop,
+          Event::KeyDown { keycode: Some(Keycode::Escape), .. } => break 'main_loop,
+          _ => ()
+        }
+      }
     }
   }
 
@@ -72,5 +90,13 @@ impl GVPengine {
     };
 
     (entry, vk_instance)
+  }
+}
+
+impl Drop for GVPengine {
+  fn drop(&mut self) {
+    unsafe {
+      self.vk_instance.destroy_instance(None);
+    }
   }
 }
