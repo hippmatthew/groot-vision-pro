@@ -80,6 +80,7 @@ impl GVPEngine {
 
     let create_info = {
       vk::InstanceCreateInfo::default()
+        .flags(flags)
         .application_info(&application_info)
         .enabled_layer_names(&layers)
         .enabled_extension_names(&extensions)
