@@ -1,15 +1,3 @@
-mod device;
-mod engine;
-mod gui;
+mod gvp_engine;
 
-use engine::GVPengine;
-
-fn main() {
-    let engine = GVPengine::init();
-
-    'main_loop: loop {
-        if engine.poll_events() {
-            break 'main_loop;
-        }
-    }
-}
+fn main() {}
