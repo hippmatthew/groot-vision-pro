@@ -15,14 +15,15 @@ macro_rules! gvp_version {
 }
 
 pub struct GVPEngine {
+  window: Window,
   entry: ash::Entry,
   instance: ash::Instance,
-  surface_loader: surface::Instance,
-  surface: vk::SurfaceKHR
 }
 
 impl GVPEngine {
   pub fn init() -> Self {
+    let window = Window::new();
+
     let entry = match unsafe { ash::Entry::load() } {
       Ok(entry) => entry,
       Err(error) => panic!("failed to load vulkan with error: {error}")
@@ -31,6 +32,7 @@ impl GVPEngine {
     let instance = GVPEngine::create_instance(&entry);
 
     GVPEngine {
+      window,
       entry,
       instance,
     }

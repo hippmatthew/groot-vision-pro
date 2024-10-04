@@ -20,15 +20,34 @@ impl Window {
       Err(error) => panic!("failed to initialize SDL video subsystem with error: {error}")
     };
 
-    let window =
+    let window = match {
+      video.window("Groot Vision Pro", 1280, 720)
+        .vulkan()
+        .build()
+    } {
+      Ok(window) => window,
+      Err(error) => panic!("failed to create SDL window with error: {error}")
+    };
 
     Window {
       context,
-      video
+      video,
+      window
     }
   }
 
   pub fn extensions() -> Vec<*const i8> {
-    Vec::<*const i8>::new();
+    let str_extensions = match SDLWindow::vulkan_instance_extensions() {
+      Ok(str_extensions) => str_extensions,
+      Err(error) => panic!("failed to get required sdl window extensions with error: {error}")
+    };
+
+    let mut extensions = Vec::<*const i8>::new();
+
+    for extension in str_extensions {
+      extensions.push(extension.as_ptr() as *const i8);
+    }
+
+    extensions
   }
 }
