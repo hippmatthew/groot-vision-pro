@@ -2,7 +2,7 @@ use crate::gvp_engine::window::Window;
 
 use ash::{vk, khr::surface};
 
-use std::{ffi::CStr, vec::Vec};
+use std::ffi::CStr;
 
 macro_rules! c_str {
   ($s:expr) => {
@@ -16,25 +16,28 @@ macro_rules! gvp_version {
 
 pub struct GVPEngine {
   window: Window,
-  entry: ash::Entry,
   instance: ash::Instance,
+  surface_loader: surface::Instance,
+  surface: vk::SurfaceKHR
 }
 
 impl GVPEngine {
   pub fn init() -> Self {
-    let window = Window::new();
-
     let entry = match unsafe { ash::Entry::load() } {
       Ok(entry) => entry,
       Err(error) => panic!("failed to load vulkan with error: {error}")
     };
 
+    let window = Window::new();
     let instance = GVPEngine::create_instance(&window, &entry);
+    let surface_loader = surface::Instance::new(&entry, &instance);
+    let surface = window.surface(&instance);
 
     GVPEngine {
       window,
-      entry,
       instance,
+      surface_loader,
+      surface
     }
   }
 
@@ -43,6 +46,8 @@ impl GVPEngine {
   }
 
   fn create_instance(window: &Window, entry: &ash::Entry) -> ash::Instance {
+
+
     let application_info = {
       vk::ApplicationInfo::default()
         .application_name(c_str!("Groot Vision Pro"))
@@ -95,6 +100,9 @@ impl GVPEngine {
 
 impl Drop for GVPEngine {
   fn drop(&mut self) {
-    unsafe{ self.instance.destroy_instance(None) };
+    unsafe{
+      self.surface_loader.destroy_surface(self.surface, None);
+      self.instance.destroy_instance(None);
+    }
   }
 }

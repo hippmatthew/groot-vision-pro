@@ -1,10 +1,10 @@
 use sdl2::{event::Event, keyboard::Keycode, video::Window as SDLWindow, Sdl, VideoSubsystem};
+use ash::{khr::surface, vk::{self, Handle}};
 
 use std::vec::Vec;
 
 pub struct Window {
   context: Sdl,
-  video: VideoSubsystem,
   window: SDLWindow
 }
 
@@ -32,7 +32,6 @@ impl Window {
 
     Window {
       context,
-      video,
       window
     }
   }
@@ -50,6 +49,13 @@ impl Window {
     }
 
     extensions
+  }
+
+  pub fn surface(&self, instance: &ash::Instance) -> vk::SurfaceKHR {
+    match self.window.vulkan_create_surface(instance.handle().as_raw() as usize) {
+      Ok(surface) => vk::SurfaceKHR::from_raw(surface),
+      Err(error) => panic!("failed to create window surface with error: {error}")
+    }
   }
 
   pub fn poll_events(&self) -> bool {
