@@ -1,19 +1,8 @@
+mod queuefamilies;
+
 use ash::{vk, khr::surface};
 
 use std::{collections::HashMap};
-
-pub enum QueueFamilyType {
-  Main,
-  Async,
-  Compute,
-  Transfer,
-  Sparse
-}
-
-pub struct QueueFamily {
-  pub index: usize,
-  pub queue: vk::Queue
-}
 
 pub struct GPU {
   device: vk::PhysicalDevice,
