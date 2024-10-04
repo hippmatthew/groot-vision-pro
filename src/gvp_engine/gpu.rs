@@ -26,7 +26,7 @@ impl GPU {
   // 2. methods for accessing queue families
   // 3. query whether the gpu contains a specific queue
 
-  pub fn get(instance: &vk::Instance, surface_loader: &surface::Instance, surface: &vk::SurfaceKHR) -> Self {
+  pub fn get(instance: &ash::Instance, surface_loader: &surface::Instance, surface: &vk::SurfaceKHR) -> Self {
     // 1. get a list of all gpus
     // 2. loop through all gpus and check if they are suitable
     //      - Must have a main queue
@@ -39,6 +39,17 @@ impl GPU {
     // 4. Store gpu in a variable called best option. Move most suitable gpu into it based on priority
     // 5. Store the queue families
 
+    let gpus = match unsafe { instance.enumerate_physical_devices() } {
+      Ok(gpus) => gpus,
+      Err(error) => panic!("failed to enumerate physical devices with error: {error}")
+    };
+
+    for gpu in gpus {
+
+    }
+  }
+
+  fn queue_families(instance: &ash::Instance, surface_loader: &surface::Instance, surface: &vk::SurfaceKHR) {
 
   }
 }
