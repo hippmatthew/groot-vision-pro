@@ -29,7 +29,7 @@ impl GVPEngine {
       Err(error) => panic!("failed to load vulkan with error: {error}")
     };
 
-    let instance = GVPEngine::create_instance(&entry);
+    let instance = GVPEngine::create_instance(&window, &entry);
 
     GVPEngine {
       window,
@@ -38,7 +38,11 @@ impl GVPEngine {
     }
   }
 
-  fn create_instance(entry: &ash::Entry) -> ash::Instance {
+  pub fn poll_events(&self) -> bool {
+    self.window.poll_events()
+  }
+
+  fn create_instance(window: &Window, entry: &ash::Entry) -> ash::Instance {
     let application_info = {
       vk::ApplicationInfo::default()
         .application_name(c_str!("Groot Vision Pro"))
@@ -49,7 +53,7 @@ impl GVPEngine {
     };
 
     let layers = [ c_str!("VK_KHR_validation").as_ptr() ];
-    let mut extensions = Window::extensions();
+    let mut extensions = window.extensions();
     let mut flags = vk::InstanceCreateFlags::default();
 
     let properties = match unsafe { entry.enumerate_instance_extension_properties(None) } {

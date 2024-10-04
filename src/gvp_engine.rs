@@ -1,2 +1,2 @@
-mod engine;
-mod window;
+pub mod engine;
+pub mod window;
