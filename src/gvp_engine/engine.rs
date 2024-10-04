@@ -52,7 +52,7 @@ impl GVPEngine {
         .api_version(vk::API_VERSION_1_3)
     };
 
-    let layers = [ c_str!("VK_KHR_validation").as_ptr() ];
+    let layers = [ c_str!("VK_LAYER_KHRONOS_validation").as_ptr() ];
     let mut extensions = window.extensions();
     let mut flags = vk::InstanceCreateFlags::default();
 
