@@ -3,7 +3,7 @@ Just a fun project meant to play around with OpenXR and Vulkan to mimic some app
 
 Some goals I have in mind:
 1. create a vulkan dynamic renderer compatible with OpenXR
-2. create a gui component library with winit
+2. create a gui component library with sdl2
 3. Use ultralight alongside my gui library to make a browser
 4. Place the user in a calm environment (like the side of a mountain with a waterfall)
 5. For memes - access the menu using the Sword Art Online gesture
@@ -23,3 +23,22 @@ My initial thoughts:
 - I'll have to think about how to do gestures / controller input.
 - If I can track head position, I can infer where the user's eyes are looking and change the opacity of the windows accordingly. That should provide a nice professional look and ease eye strain?
 - It would be neat to have objects like a speaker, which plays 3D sound in the world space when you turn on apple music. Also headphones, which just plays the music as normal. This might be ambitious though as I would have to study the mathematics of world space audio
+
+
+App Structure:
+- GVPEngine: the engine which brings together everything for running the dynamic renderer
+  - Window
+    - handles all things sdl
+  - Device Allocator (concurrent allocator for gpu buffers)
+  - Dynamic Renderer
+    - Camera matrices
+  - Vulkan Objects
+    - synchronization objects
+    - device
+    - physical device
+    - swapchain
+    - surface
+    - surface loader
+  - OpenXR stuffs
+- Apps are built on top of the engine as gui packages? The apps are pipelined objects and are processed by the engine when opened?
+- This will get more in detail when I actually start to work on the gui
