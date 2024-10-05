@@ -1,5 +1,5 @@
-use sdl2::{event::Event, keyboard::Keycode, video::Window as SDLWindow, Sdl, VideoSubsystem};
-use ash::{khr::surface, vk::{self, Handle}};
+use sdl2::{event::Event, keyboard::Keycode, video::Window as SDLWindow, Sdl};
+use ash::vk::{self, Handle};
 
 use std::vec::Vec;
 

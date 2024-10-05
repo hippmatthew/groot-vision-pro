@@ -19,7 +19,8 @@ pub struct GVPEngine {
   gpu: GPU,
   instance: ash::Instance,
   surface_loader: surface::Instance,
-  surface: vk::SurfaceKHR
+  surface: vk::SurfaceKHR,
+  device: ash::Device
 }
 
 impl GVPEngine {
@@ -33,14 +34,22 @@ impl GVPEngine {
     let instance = GVPEngine::create_instance(&window, &entry);
     let surface_loader = surface::Instance::new(&entry, &instance);
     let surface = window.surface(&instance);
-    let gpu = GPU::get(&instance, &surface_loader, &surface, &Vec::<*const i8>::new());
+
+    let mut required_extensions = vec![
+      vk::KHR_SWAPCHAIN_NAME.as_ptr(),
+      vk::KHR_DYNAMIC_RENDERING_NAME.as_ptr()
+    ];
+
+    let gpu = GPU::get(&instance, &surface_loader, &surface, &required_extensions);
+    let device = GVPEngine::create_device(&instance, &gpu, &mut required_extensions);
 
     GVPEngine {
       window,
       instance,
       surface_loader,
       surface,
-      gpu
+      gpu,
+      device
     }
   }
 
@@ -99,11 +108,55 @@ impl GVPEngine {
       Err(error) => panic!("failed to create instance with error: {error}")
     }
   }
+
+  fn create_device(
+    instance: &ash::Instance,
+    gpu: &GPU,
+    required_extensions: &mut Vec<*const i8>
+  ) -> ash::Device {
+    let device_extensions = match unsafe { instance.enumerate_device_extension_properties(gpu.device) } {
+      Ok(device_extensions) => device_extensions,
+      Err(error) => panic!("failed to get gpu extensions to check for portability subset with error: {error}")
+    };
+
+    for extension in device_extensions {
+      let name = match extension.extension_name_as_c_str() {
+        Ok(name) => name,
+        Err(error) => panic!("failed to get extension name for device creation with error {error}")
+      };
+
+      if name != vk::KHR_PORTABILITY_SUBSET_NAME { continue; }
+
+      required_extensions.push(vk::KHR_PORTABILITY_SUBSET_NAME.as_ptr());
+      break;
+    }
+
+    let queue_create_infos = gpu.queue_create_infos();
+    let features = vk::PhysicalDeviceFeatures::default();
+    let mut dynamic_rendering = {
+      vk::PhysicalDeviceDynamicRenderingFeatures::default()
+        .dynamic_rendering(true)
+    };
+
+    let create_info = {
+      vk::DeviceCreateInfo::default()
+        .enabled_extension_names(&required_extensions)
+        .enabled_features(&features)
+        .queue_create_infos(&queue_create_infos)
+        .push_next(&mut dynamic_rendering)
+    };
+
+    match unsafe { instance.create_device(gpu.device, &create_info, None) } {
+      Ok(device) => device,
+      Err(error) => panic!("failed to create device with error: {error}")
+    }
+  }
 }
 
 impl Drop for GVPEngine {
   fn drop(&mut self) {
     unsafe{
+      self.device.destroy_device(None);
       self.surface_loader.destroy_surface(self.surface, None);
       self.instance.destroy_instance(None);
     }

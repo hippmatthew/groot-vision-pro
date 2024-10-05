@@ -95,7 +95,7 @@ impl QueueFamily {
 }
 
 pub struct QueueFamilyMap {
-  map: HashMap<QueueFamilyType, QueueFamily>
+  pub map: HashMap<QueueFamilyType, QueueFamily>,
 }
 
 impl QueueFamilyMap {
@@ -168,7 +168,7 @@ impl QueueFamilyMap {
       map.insert(QueueFamilyType::Async, QueueFamily::new(async_queues.pop_front().unwrap()));
     }
     else if !main_queues.is_empty() {
-      map.insert(QueueFamilyType::Async, QueueFamily::new(main_queues.pop_front().unwrap()),);
+      map.insert(QueueFamilyType::Async, QueueFamily::new(main_queues.pop_front().unwrap()));
     }
 
     if let Some(index) = sparse_queues.pop_front() {
