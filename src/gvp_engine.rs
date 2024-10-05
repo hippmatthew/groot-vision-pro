@@ -1,4 +1,5 @@
 pub mod engine;
-pub mod window;
 
+mod window;
 mod gpu;
+mod renderer;

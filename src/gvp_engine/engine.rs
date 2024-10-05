@@ -1,4 +1,4 @@
-use crate::gvp_engine::{window::Window, gpu::GPU};
+use crate::gvp_engine::{window::Window, gpu::GPU, renderer::Renderer};
 
 use ash::{vk, khr::surface};
 
@@ -20,7 +20,8 @@ pub struct GVPEngine {
   instance: ash::Instance,
   surface_loader: surface::Instance,
   surface: vk::SurfaceKHR,
-  device: ash::Device
+  device: ash::Device,
+  renderer: Renderer
 }
 
 impl GVPEngine {
@@ -40,8 +41,12 @@ impl GVPEngine {
       vk::KHR_DYNAMIC_RENDERING_NAME.as_ptr()
     ];
 
-    let gpu = GPU::get(&instance, &surface_loader, &surface, &required_extensions);
+    let mut gpu = GPU::get(&instance, &surface_loader, &surface, &required_extensions);
     let device = GVPEngine::create_device(&instance, &gpu, &mut required_extensions);
+
+    gpu.get_queues(&device);
+
+    let renderer = Renderer::new(&instance, &device, &surface_loader, &surface, &gpu);
 
     GVPEngine {
       window,
@@ -49,7 +54,8 @@ impl GVPEngine {
       surface_loader,
       surface,
       gpu,
-      device
+      device,
+      renderer
     }
   }
 
@@ -156,6 +162,7 @@ impl GVPEngine {
 impl Drop for GVPEngine {
   fn drop(&mut self) {
     unsafe{
+      self.renderer.clean(&self.device);
       self.device.destroy_device(None);
       self.surface_loader.destroy_surface(self.surface, None);
       self.instance.destroy_instance(None);

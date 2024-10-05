@@ -53,28 +53,18 @@ impl GPU {
         _ => ()
       }
 
-      println!("passed initial type check");
-
       if !GPU::has_priority(device_type, properties.device_type) { continue; }
-
-      println!("has priority");
 
       let map = QueueFamilyMap::populate(instance, surface_loader, surface, &gpu);
       if !map.contains(&QueueFamilyType::Main) { continue; }
-
-      println!("has main queue");
 
       if let Ok(formats) = unsafe { surface_loader.get_physical_device_surface_formats(gpu, *surface) } {
         if formats.is_empty() { continue; }
       } else { continue; }
 
-      println!("has valid formats");
-
       if let Ok(present_modes) = unsafe { surface_loader.get_physical_device_surface_present_modes(gpu, *surface) } {
         if present_modes.is_empty() { continue; }
       } else { continue; }
-
-      println!("has valid present modes");
 
       if let Ok(gpu_extensions) = unsafe { instance.enumerate_device_extension_properties(gpu) } {
         for extension in extensions {
@@ -95,8 +85,6 @@ impl GPU {
           if !found { continue 'gpu_loop; }
         }
       } else { continue; }
-
-      println!("supports extensions");
 
       device = Some(gpu);
       queue_families = Some(map);
@@ -131,7 +119,7 @@ impl GPU {
 
   pub fn get_queues(&mut self, device: &ash::Device) {
     for (_, queue_family) in &mut self.queue_families.map {
-      queue_family.queue = unsafe { device.get_device_queue(queue_family.index as u32, 1) }
+      queue_family.queue = unsafe { device.get_device_queue(queue_family.index as u32, 0) }
     }
   }
 
