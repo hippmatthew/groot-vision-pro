@@ -105,14 +105,13 @@ impl QueueFamilyMap {
     surface: &vk::SurfaceKHR,
     device: &vk::PhysicalDevice
   ) -> Self {
-    let mut main_queues = VecDeque::<usize>::new();
-    let mut async_queues = VecDeque::<usize>::new();
-    let mut compute_queues = VecDeque::<usize>::new();
+    let mut main_queues     = VecDeque::<usize>::new();
+    let mut async_queues    = VecDeque::<usize>::new();
+    let mut compute_queues  = VecDeque::<usize>::new();
     let mut transfer_queues = VecDeque::<usize>::new();
-    let mut sparse_queues = VecDeque::<usize>::new();
+    let mut sparse_queues   = VecDeque::<usize>::new();
 
-    let properties =
-      unsafe { instance.get_physical_device_queue_family_properties(*device) };
+    let properties = unsafe { instance.get_physical_device_queue_family_properties(*device) };
 
     let mut index: usize = 0;
     for property in properties {

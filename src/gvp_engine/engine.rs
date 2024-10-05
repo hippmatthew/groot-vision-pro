@@ -80,14 +80,14 @@ impl GVPEngine {
     let mut flags = vk::InstanceCreateFlags::default();
 
     let properties = match unsafe { entry.enumerate_instance_extension_properties(None) } {
-      Ok(properties) => properties,
-      Err(error) => panic!("failed to get instance extension properties with error: {error}")
+      Ok(properties)  => properties,
+      Err(error)      => panic!("failed to get instance extension properties with error: {error}")
     };
 
     for property in properties {
       let name = match property.extension_name_as_c_str() {
-        Ok(name) => name,
-        Err(error) => panic!("failed to get extension name with error: {error}")
+        Ok(name)    => name,
+        Err(error)  => panic!("failed to get extension name with error: {error}")
       };
 
       if name != vk::KHR_PORTABILITY_ENUMERATION_NAME {
@@ -110,8 +110,8 @@ impl GVPEngine {
     };
 
     match unsafe { entry.create_instance(&create_info, None) } {
-      Ok(instance) => instance,
-      Err(error) => panic!("failed to create instance with error: {error}")
+      Ok(instance)  => instance,
+      Err(error)    => panic!("failed to create instance with error: {error}")
     }
   }
 
@@ -121,14 +121,14 @@ impl GVPEngine {
     required_extensions: &mut Vec<*const i8>
   ) -> ash::Device {
     let device_extensions = match unsafe { instance.enumerate_device_extension_properties(gpu.device) } {
-      Ok(device_extensions) => device_extensions,
-      Err(error) => panic!("failed to get gpu extensions to check for portability subset with error: {error}")
+      Ok(extensions)  => extensions,
+      Err(error)      => panic!("failed to get gpu extensions to check for portability subset with error: {error}")
     };
 
     for extension in device_extensions {
       let name = match extension.extension_name_as_c_str() {
-        Ok(name) => name,
-        Err(error) => panic!("failed to get extension name for device creation with error {error}")
+        Ok(name)    => name,
+        Err(error)  => panic!("failed to get extension name for device creation with error {error}")
       };
 
       if name != vk::KHR_PORTABILITY_SUBSET_NAME { continue; }

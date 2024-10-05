@@ -72,8 +72,8 @@ impl GPU {
 
           for gpu_extension in &gpu_extensions {
             let name = match gpu_extension.extension_name_as_c_str() {
-              Ok(name) => name,
-              Err(error) => panic!("failed to get device extension name with error: {error}")
+              Ok(name)    => name,
+              Err(error)  => panic!("failed to get device extension name with error: {error}")
             };
 
             if name == unsafe { CStr::from_ptr(*extension) } {

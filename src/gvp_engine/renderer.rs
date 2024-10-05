@@ -75,7 +75,7 @@ impl Renderer {
   ) -> (vk::SurfaceFormatKHR, vk::PresentModeKHR, vk::Extent2D, u32, vk::SurfaceTransformFlagsKHR) {
     let formats = match unsafe { surface_loader.get_physical_device_surface_formats(gpu.device, *surface) } {
       Ok(formats) => formats,
-      Err(error) => panic!("failed to get surface formats with error: {error}")
+      Err(error)  => panic!("failed to get surface formats with error: {error}")
     };
 
     // use a format that matches one of the desired formats in the match statement
@@ -90,7 +90,7 @@ impl Renderer {
 
     let present_modes = match unsafe { surface_loader.get_physical_device_surface_present_modes(gpu.device, *surface) } {
       Ok(present_modes) => present_modes,
-      Err(error) => panic!("failed to get surface present modes with error: {error}")
+      Err(error)        => panic!("failed to get surface present modes with error: {error}")
     };
 
     // same structure as formats. put desired present modes in the match statement
@@ -103,8 +103,8 @@ impl Renderer {
       .unwrap_or(vk::PresentModeKHR::FIFO);
 
     let capabilities = match unsafe { surface_loader.get_physical_device_surface_capabilities(gpu.device, *surface) } {
-      Ok(capabilities) => capabilities,
-      Err(error) => panic!("failed to get surface capabilities with error: {error}")
+      Ok(capabilities)  => capabilities,
+      Err(error)        => panic!("failed to get surface capabilities with error: {error}")
     };
 
     let extent = {
@@ -170,7 +170,7 @@ impl Renderer {
 
     match unsafe { swapchain_loader.create_swapchain(&create_info, None) } {
       Ok(swapchain) => swapchain,
-      Err(error) => panic!("failed to create swapchain with error: {error}")
+      Err(error)    => panic!("failed to create swapchain with error: {error}")
     }
   }
 
