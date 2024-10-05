@@ -46,10 +46,6 @@ pub struct QueueFamily {
   pub queue: vk::Queue
 }
 
-pub struct QueueFamilyMap {
-  map: HashMap<QueueFamilyType, QueueFamily>
-}
-
 impl QueueFamily {
   pub fn new(index: usize) -> Self {
     QueueFamily {
@@ -66,13 +62,44 @@ impl QueueFamily {
     index: usize
   ) -> QueueFamilyType {
 
+    let filter = vk::QueueFlags::SPARSE_BINDING;
+    if queue_flags & filter == filter {
+      return QueueFamilyType::Sparse
+    }
+
+    let filter = vk::QueueFlags::GRAPHICS | vk::QueueFlags::COMPUTE | vk::QueueFlags::TRANSFER;
+
+    if queue_flags & filter == filter {
+      if let Ok(_) = unsafe { surface_loader.get_physical_device_surface_support(*device, index as u32, *surface) } {
+        return QueueFamilyType::Main
+      }
+    }
+
+    let filter = vk::QueueFlags::COMPUTE | vk::QueueFlags::TRANSFER;
+    if queue_flags & filter == filter {
+      return QueueFamilyType::Async
+    }
+
+    let filter = vk::QueueFlags::COMPUTE;
+    if queue_flags & filter == filter {
+      return QueueFamilyType::Compute
+    }
+
+    let filter = vk::QueueFlags::TRANSFER;
+    if queue_flags & filter == filter {
+      return QueueFamilyType::Transfer
+    }
+
+    panic!("failed to find queue family type within current range of filters")
   }
 }
 
-struct MissingQueueFamily;
+pub struct QueueFamilyMap {
+  map: HashMap<QueueFamilyType, QueueFamily>
+}
 
 impl QueueFamilyMap {
-  pub fn new(
+  pub fn populate(
     instance: &ash::Instance,
     surface_loader: &surface::Instance,
     surface: &vk::SurfaceKHR,

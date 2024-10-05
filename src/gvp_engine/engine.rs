@@ -1,4 +1,4 @@
-use crate::gvp_engine::window::Window;
+use crate::gvp_engine::{window::Window, gpu::GPU};
 
 use ash::{vk, khr::surface};
 
@@ -11,11 +11,12 @@ macro_rules! c_str {
 }
 
 macro_rules! gvp_version {
-  () => { vk::make_api_version(0, 0, 3, 0) };
+  () => { vk::make_api_version(0, 0, 6, 0) };
 }
 
 pub struct GVPEngine {
   window: Window,
+  gpu: GPU,
   instance: ash::Instance,
   surface_loader: surface::Instance,
   surface: vk::SurfaceKHR
@@ -32,12 +33,14 @@ impl GVPEngine {
     let instance = GVPEngine::create_instance(&window, &entry);
     let surface_loader = surface::Instance::new(&entry, &instance);
     let surface = window.surface(&instance);
+    let gpu = GPU::get(&instance, &surface_loader, &surface, &Vec::<*const i8>::new());
 
     GVPEngine {
       window,
       instance,
       surface_loader,
-      surface
+      surface,
+      gpu
     }
   }
 

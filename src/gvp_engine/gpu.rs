@@ -1,12 +1,14 @@
 mod queuefamilies;
 
+use queuefamilies::*;
+
 use ash::{vk, khr::surface};
 
-use std::{collections::HashMap};
+use std::{ffi::CStr, vec::Vec};
 
 pub struct GPU {
   device: vk::PhysicalDevice,
-  queue_families: HashMap<QueueFamilyType, QueueFamily>
+  queue_families: QueueFamilyMap
 }
 
 impl GPU {
@@ -15,7 +17,12 @@ impl GPU {
   // 2. methods for accessing queue families
   // 3. query whether the gpu contains a specific queue
 
-  pub fn get(instance: &ash::Instance, surface_loader: &surface::Instance, surface: &vk::SurfaceKHR) -> Self {
+  pub fn get(
+    instance: &ash::Instance,
+    surface_loader: &surface::Instance,
+    surface: &vk::SurfaceKHR,
+    extensions: &Vec<*const i8>
+  ) -> Self {
     // 1. get a list of all gpus
     // 2. loop through all gpus and check if they are suitable
     //      - Must have a main queue
@@ -29,16 +36,79 @@ impl GPU {
     // 5. Store the queue families
 
     let gpus = match unsafe { instance.enumerate_physical_devices() } {
-      Ok(gpus) => gpus,
-      Err(error) => panic!("failed to enumerate physical devices with error: {error}")
+      Ok(gpus)    => gpus,
+      Err(error)  => panic!("failed to enumerate physical devices with error: {error}")
     };
 
-    for gpu in gpus {
+    let mut device : Option<vk::PhysicalDevice> = None;
+    let mut device_type = vk::PhysicalDeviceType::OTHER;
+    let mut queue_families : Option<QueueFamilyMap> = None;
 
+    'gpu_loop: for gpu in gpus {
+      let properties = unsafe { instance.get_physical_device_properties(gpu) };
+
+      match properties.device_type {
+        vk::PhysicalDeviceType::CPU   => continue,
+        vk::PhysicalDeviceType::OTHER => continue,
+        _ => ()
+      }
+
+      if !GPU::has_priority(device_type, properties.device_type) { continue; }
+
+      let map = QueueFamilyMap::populate(instance, surface_loader, surface, &gpu);
+      if !map.contains(&QueueFamilyType::Main) { continue; }
+
+      if let Ok(formats) = unsafe { surface_loader.get_physical_device_surface_formats(gpu, *surface) } {
+        if formats.is_empty() { continue; }
+      } else { continue; }
+
+      if let Ok(present_modes) = unsafe { surface_loader.get_physical_device_surface_present_modes(gpu, *surface) } {
+        if present_modes.is_empty() { continue; }
+      } else { continue; }
+
+      if let Ok(gpu_extensions) = unsafe { instance.enumerate_device_extension_properties(gpu) } {
+        for extension in extensions {
+          let mut found = false;
+
+          for gpu_extension in &gpu_extensions {
+            let name = match gpu_extension.extension_name_as_c_str() {
+              Ok(name) => name,
+              Err(error) => panic!("failed to get device extension name with error: {error}")
+            };
+
+            if name == unsafe { CStr::from_ptr(*extension) } {
+              found = true;
+              break;
+            }
+          }
+
+          if !found { continue 'gpu_loop; }
+        }
+      } else { continue; }
+
+      device = Some(gpu);
+      queue_families = Some(map);
+      device_type = properties.device_type;
+    };
+
+    if let None = device {
+      panic!("failed to find suitable physical device")
+    };
+
+    GPU {
+      device: device.unwrap(),
+      queue_families: queue_families.unwrap()
     }
   }
 
-  fn queue_families(instance: &ash::Instance, surface_loader: &surface::Instance, surface: &vk::SurfaceKHR) {
-
+  // checks to see if gpu2 has priority over gpu1.
+  fn has_priority(gpu1: vk::PhysicalDeviceType, gpu2: vk::PhysicalDeviceType) -> bool {
+    match ( gpu1, gpu2 ) {
+      ( vk::PhysicalDeviceType::OTHER, _ )                                              => return true,
+      ( vk::PhysicalDeviceType::INTEGRATED_GPU, vk::PhysicalDeviceType::DISCRETE_GPU )  => return true,
+      ( vk::PhysicalDeviceType::VIRTUAL_GPU, vk::PhysicalDeviceType::DISCRETE_GPU )     => return true,
+      ( vk::PhysicalDeviceType::VIRTUAL_GPU, vk::PhysicalDeviceType::INTEGRATED_GPU )   => return true,
+      _ => return false
+    }
   }
 }
